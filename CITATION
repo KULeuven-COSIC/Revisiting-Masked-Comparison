@@ -1,0 +1,9 @@
+@misc{cryptoeprint:2022:110,
+    author       = {Jan-Pieter D'Anvers and
+		    Michiel Van Beirendonck and
+		    Ingrid Verbauwhede},
+    title        = {Revisiting Higher-Order Masked Comparison for Lattice-Based Cryptography: Algorithms and Bit-sliced Implementations},
+    howpublished = {Cryptology ePrint Archive, Report 2022/110},
+    year         = {2022},
+    note         = {\url{https://ia.cr/2022/110}},
+}
