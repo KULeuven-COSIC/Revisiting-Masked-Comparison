@@ -67,7 +67,8 @@ static void write_bit(size_t nshares, size_t nbits, uint32_t x[nshares][nbits], 
 
 void SecAdd_bitsliced(size_t nshares, size_t nbits, uint32_t z[nshares][nbits], const uint32_t x[nshares][nbits], const uint32_t y[nshares][nbits])
 {
-	uint32_t xANDy[nshares], xXORy[nshares], cANDxXORy[nshares];
+	// uint32_t xANDy[nshares], xXORy[nshares], cANDxXORy[nshares];
+	uint32_t xXORc[nshares], xXORy[nshares], xXORyANDxXORc[nshares];
 	uint32_t carry[nshares], sum[nshares];
 	uint32_t x_bit[nshares], y_bit[nshares];
 
@@ -88,15 +89,21 @@ void SecAdd_bitsliced(size_t nshares, size_t nbits, uint32_t z[nshares][nbits], 
 		SecXOR32(nshares, xXORy, x_bit, y_bit);
 		SecXOR32(nshares, sum, xXORy, carry);
 
-		/* carry out : implemented with (2) to reduce SecAND's
-		*  	(1) c_out = (c_in AND x) XOR (c_in AND y) XOR (x AND y) [http://www.crypto-uni.lu/jscoron/publications/secconvorder.pdf, Algorithm 2]
-		* 	(2) c_out = (c_in AND (x XOR y)) XOR (x AND y) *
-		*/
+		/* c_out can be computed in several ways
+		 *  (1) c_out = (c_in AND x) XOR (c_in AND y) XOR (x AND y) [taken from http://www.crypto-uni.lu/jscoron/publications/secconvorder.pdf, Algorithm 2]
+		 * 	(2) c_out = (c_in AND (x XOR y)) XOR (x AND y)
+		 *	(3) c_out = ((x XOR c_in) AND (x XOR y)) XOR x [taken from https://eprint.iacr.org/2022/158.pdf, Algorithm 5]
+		 *
+		 *  (3) needs the fewest SecAND
+		 */
 		if (i != nbits - 1) //* nbits - 1 because we don't need final carry
 		{
-			SecAND32(nshares, xANDy, x_bit, y_bit);
-			SecAND32(nshares, cANDxXORy, xXORy, carry);
-			SecXOR32(nshares, carry, cANDxXORy, xANDy);
+			// SecAND32(nshares, xANDy, x_bit, y_bit);
+			// SecAND32(nshares, cANDxXORy, xXORy, carry);
+			// SecXOR32(nshares, carry, cANDxXORy, xANDy);
+			SecXOR32(nshares, xXORc, x_bit, carry);
+			SecAND32(nshares, xXORyANDxXORc, xXORy, xXORc);
+			SecXOR32(nshares, carry, xXORyANDxXORc, x_bit);
 		}
 
 		write_bit(nshares, nbits, z, sum, i);
